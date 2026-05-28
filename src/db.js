@@ -1,8 +1,16 @@
+const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
 const Database = require("better-sqlite3");
 
-const db = new Database(path.join(__dirname, "..", "data.sqlite"));
+const configuredDatabasePath = process.env.DATABASE_PATH || "data.sqlite";
+const resolvedDatabasePath = path.isAbsolute(configuredDatabasePath)
+  ? configuredDatabasePath
+  : path.join(__dirname, "..", configuredDatabasePath);
+
+fs.mkdirSync(path.dirname(resolvedDatabasePath), { recursive: true });
+
+const db = new Database(resolvedDatabasePath);
 
 db.pragma("journal_mode = WAL");
 

@@ -1,0 +1,23 @@
+app = "wisdom-grace-prayer-relay"
+primary_region = "atl"
+
+[env]
+  PORT = "3000"
+  DATABASE_PATH = "/data/data.sqlite"
+
+[[mounts]]
+  source = "data"
+  destination = "/data"
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ["app"]
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory = "1gb"
