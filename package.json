@@ -1,0 +1,26 @@
+{
+  "name": "prayer-schedule-signup",
+  "version": "1.0.0",
+  "description": "24-hour prayer schedule signup system",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "prayer",
+    "schedule",
+    "signup",
+    "express",
+    "sqlite"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "better-sqlite3": "^11.8.1",
+    "express": "^4.21.2",
+    "luxon": "^3.5.0",
+    "pdfkit": "^0.17.1",
+    "twilio": "^6.0.2"
+  }
+}

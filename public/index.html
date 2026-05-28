@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>24-Hour Prayer Signup</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Work+Sans:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div id="country-modal" class="country-modal">
+      <div class="country-dialog card">
+        <p class="eyebrow">Before You Begin</p>
+        <h2>Select your country</h2>
+        <p class="hero-copy">
+          We’ll show the prayer schedule in the time zone that matches where you
+          are booking from.
+        </p>
+        <div class="country-actions">
+          <button class="primary-button country-choice" type="button" data-country="usa">
+            USA
+          </button>
+          <button class="secondary-button country-choice" type="button" data-country="zimbabwe">
+            Zimbabwe
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <main class="page-shell">
+      <section class="hero card">
+        <img class="site-logo" src="/logo.svg" alt="Wisdom and Grace International Ministries" />
+        <p class="eyebrow">Prayer Event Signup</p>
+        <div class="hero-meta">
+          <span id="event-date-badge" class="badge badge-soft">Loading event date...</span>
+          <span id="country-badge" class="badge badge-soft hidden"></span>
+          <button id="change-country" class="badge badge-soft badge-button hidden" type="button">
+            Change country
+          </button>
+        </div>
+      </section>
+
+      <section class="layout">
+        <section class="card schedule-panel">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Available Hours</p>
+              <h2>24-hour prayer schedule</h2>
+            </div>
+            <p class="section-note">
+              Booked slots update live, so if someone takes a slot it will close
+              immediately for everyone.
+            </p>
+          </div>
+
+          <div id="schedule-status" class="inline-message info">
+            Select your country to view the schedule.
+          </div>
+          <div id="schedule-grid" class="schedule-grid"></div>
+        </section>
+
+        <section class="card form-panel">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Your Signup</p>
+              <h2>Reserve your prayer hours</h2>
+            </div>
+          </div>
+
+          <div id="selected-slot-summary" class="selected-slot empty">
+            Select one or more available hours to continue.
+          </div>
+
+          <form id="booking-form" class="booking-form" novalidate>
+            <input type="hidden" id="slotHour" name="slotHour" />
+
+            <label>
+              Full name
+              <input id="fullName" name="fullName" type="text" maxlength="120" required />
+            </label>
+
+            <label>
+              Country or location
+              <input
+                id="location"
+                name="location"
+                type="text"
+                maxlength="120"
+                placeholder="Zimbabwe, USA, city, or church name"
+                required
+              />
+            </label>
+
+            <label>
+              Phone number or email
+              <input
+                id="contact"
+                name="contact"
+                type="text"
+                maxlength="160"
+                placeholder="example@email.com or +1 555 555 5555"
+                required
+              />
+            </label>
+
+            <label>
+              Preferred prayer topic <span class="optional-label">Optional</span>
+              <textarea
+                id="topic"
+                name="topic"
+                rows="4"
+                maxlength="300"
+                placeholder="Families, healing, revival, youth, unity, missions..."
+              ></textarea>
+            </label>
+
+            <div id="form-message" class="inline-message hidden"></div>
+
+            <button id="submit-button" class="primary-button" type="submit">
+              Confirm my prayer hours
+            </button>
+          </form>
+        </section>
+      </section>
+    </main>
+
+    <script src="/app.js"></script>
+  </body>
+  </html>

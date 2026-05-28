@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Prayer Schedule Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Work+Sans:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="page-shell">
+      <section class="card hero admin-hero">
+        <div>
+          <img class="site-logo" src="/logo.svg" alt="Wisdom and Grace International Ministries" />
+          <p class="eyebrow">Admin Schedule</p>
+          <h1>Full prayer booking overview</h1>
+          <p class="hero-copy">
+            View every hour, see who booked it, and export the schedule for
+            coordinators and church leaders.
+          </p>
+        </div>
+        <div class="admin-actions">
+          <a id="export-csv" class="secondary-button" href="#">Download CSV</a>
+          <a id="export-pdf" class="primary-button" href="#">Download PDF</a>
+        </div>
+      </section>
+
+      <section class="card admin-panel">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Schedule</p>
+            <h2>All 24 prayer hours</h2>
+          </div>
+          <span id="admin-event-date" class="badge badge-soft">Loading event date...</span>
+        </div>
+
+        <div id="admin-message" class="inline-message info">Loading schedule...</div>
+
+        <form id="event-date-form" class="admin-settings-form">
+          <label>
+            Prayer date
+            <input id="event-date-input" name="eventDate" type="date" required />
+          </label>
+          <button id="save-date-button" class="primary-button" type="submit">
+            Save date
+          </button>
+        </form>
+
+        <form id="reminder-form" class="admin-settings-form admin-reminder-form">
+          <label class="full-width">
+            Optional reminder note
+            <textarea
+              id="reminder-message-input"
+              name="message"
+              rows="4"
+              maxlength="600"
+              placeholder="Example: Peace be with you. This is your prayer reminder for tomorrow."
+            ></textarea>
+          </label>
+          <p class="section-note">
+            One text will be sent per signup. Email contacts are skipped automatically.
+          </p>
+          <button id="send-reminders-button" class="secondary-button" type="submit">
+            Send text reminders
+          </button>
+        </form>
+
+        <div class="admin-table-wrap">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Hour</th>
+                <th>USA Eastern Time</th>
+                <th>Zimbabwe Time</th>
+                <th>Status</th>
+                <th>Booked By</th>
+                <th>Location</th>
+                <th>Contact</th>
+                <th>Topic</th>
+              </tr>
+            </thead>
+            <tbody id="admin-table-body"></tbody>
+          </table>
+        </div>
+
+        <div id="admin-mobile-list" class="admin-mobile-list"></div>
+      </section>
+    </main>
+
+    <script src="/admin.js"></script>
+  </body>
+  </html>
