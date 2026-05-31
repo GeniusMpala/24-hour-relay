@@ -5,7 +5,24 @@ const defaultEventDate = process.env.EVENT_DATE || "2026-06-01";
 
 async function getStateStore() {
   const { getStore } = await import("@netlify/blobs");
-  return getStore({ name: "prayer-schedule", consistency: "strong" });
+  const siteID =
+    process.env.NETLIFY_BLOBS_SITE_ID ||
+    process.env.SITE_ID ||
+    process.env.NETLIFY_SITE_ID;
+  const token =
+    process.env.NETLIFY_BLOBS_TOKEN ||
+    process.env.NETLIFY_AUTH_TOKEN ||
+    process.env.NETLIFY_ACCESS_TOKEN;
+
+  const options = {};
+  if (siteID) {
+    options.siteID = siteID;
+  }
+  if (token) {
+    options.token = token;
+  }
+
+  return getStore("prayer-schedule", options);
 }
 
 function createInitialState() {

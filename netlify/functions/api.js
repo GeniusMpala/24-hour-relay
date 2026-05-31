@@ -148,11 +148,11 @@ async function schedulePayload(includeBookingDetails = false) {
   };
 }
 
-app.get("/schedule", async (req, res) => {
+app.get("/api/schedule", async (req, res) => {
   res.json(await schedulePayload(false));
 });
 
-app.get("/bookings/:id", async (req, res) => {
+app.get("/api/bookings/:id", async (req, res) => {
   const bookings = await getBookingGroupById(req.params.id);
 
   if (!bookings) {
@@ -174,7 +174,7 @@ app.get("/bookings/:id", async (req, res) => {
   });
 });
 
-app.post("/bookings", async (req, res) => {
+app.post("/api/bookings", async (req, res) => {
   const { errors, slotHours } = validateBookingInput(req.body);
   if (errors.length > 0) {
     return res.status(400).json({ errors });
@@ -219,11 +219,11 @@ app.post("/bookings", async (req, res) => {
   }
 });
 
-app.get("/admin/schedule", requireAdmin, async (req, res) => {
+app.get("/api/admin/schedule", requireAdmin, async (req, res) => {
   res.json(await schedulePayload(true));
 });
 
-app.post("/admin/event-date", requireAdmin, async (req, res) => {
+app.post("/api/admin/event-date", requireAdmin, async (req, res) => {
   const { error, eventDate } = validateEventDateInput(req.body);
   if (error) {
     return res.status(400).json({ error });
@@ -236,7 +236,7 @@ app.post("/admin/event-date", requireAdmin, async (req, res) => {
   });
 });
 
-app.post("/admin/send-reminders", requireAdmin, async (req, res) => {
+app.post("/api/admin/send-reminders", requireAdmin, async (req, res) => {
   const { error, reminderMessage } = validateReminderInput(req.body);
   if (error) {
     return res.status(400).json({ error });
@@ -404,6 +404,4 @@ app.get("/admin/export.pdf", requireAdmin, async (req, res) => {
   doc.end();
 });
 
-exports.handler = serverless(app, {
-  basePath: "/.netlify/functions/api",
-});
+exports.handler = serverless(app);
