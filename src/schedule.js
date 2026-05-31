@@ -1,8 +1,8 @@
 const { DateTime } = require("luxon");
 
-function parseEventDate(eventDate, easternTimeZone) {
+function parseEventDate(eventDate, timeZone) {
   const [year, month, day] = eventDate.split("-").map(Number);
-  return { year, month, day, zone: easternTimeZone };
+  return { year, month, day, zone: timeZone };
 }
 
 function formatRange(start, end, timeZone) {
@@ -14,12 +14,12 @@ function formatRange(start, end, timeZone) {
 
 function buildSchedule({ eventDate, easternTimeZone, zimbabweTimeZone, bookings }) {
   const bookingMap = new Map(bookings.map((booking) => [booking.slot_hour, booking]));
-  const baseDate = parseEventDate(eventDate, easternTimeZone);
+  const baseDate = parseEventDate(eventDate, zimbabweTimeZone);
 
   return Array.from({ length: 24 }, (_, hour) => {
     const start = DateTime.fromObject(
       { year: baseDate.year, month: baseDate.month, day: baseDate.day, hour },
-      { zone: easternTimeZone }
+      { zone: zimbabweTimeZone }
     );
     const end = start.plus({ hours: 1 });
     const booking = bookingMap.get(hour) || null;
