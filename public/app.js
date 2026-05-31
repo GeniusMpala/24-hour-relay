@@ -4,6 +4,7 @@ const selectedSlotSummary = document.getElementById("selected-slot-summary");
 const eventDateBadge = document.getElementById("event-date-badge");
 const countryBadge = document.getElementById("country-badge");
 const changeCountryButton = document.getElementById("change-country");
+const formPanel = document.getElementById("form-panel");
 const bookingForm = document.getElementById("booking-form");
 const slotHourInput = document.getElementById("slotHour");
 const submitButton = document.getElementById("submit-button");
@@ -11,6 +12,7 @@ const formMessage = document.getElementById("form-message");
 const countryModal = document.getElementById("country-modal");
 const countryButtons = document.querySelectorAll(".country-choice");
 const locationInput = document.getElementById("location");
+const mobileCta = document.getElementById("mobile-cta");
 
 let scheduleState = null;
 let selectedHours = [];
@@ -74,27 +76,50 @@ function updateCountryUi() {
   );
 }
 
+function updateMobileCta() {
+  if (!mobileCta) {
+    return;
+  }
+
+  if (!selectedCountry || selectedHours.length === 0) {
+    mobileCta.classList.add("hidden");
+    mobileCta.textContent = "Continue with selected hours";
+    return;
+  }
+
+  mobileCta.classList.remove("hidden");
+  mobileCta.textContent =
+    selectedHours.length === 1
+      ? "Continue with 1 selected hour"
+      : `Continue with ${selectedHours.length} selected hours`;
+}
+
 function renderSelectedSummary() {
   const config = getSelectedCountryConfig();
   if (!scheduleState || !config || selectedHours.length === 0) {
     selectedSlotSummary.className = "selected-slot empty";
     selectedSlotSummary.textContent = "Select one or more available hours to continue.";
     slotHourInput.value = "";
+    updateMobileCta();
     return;
   }
 
   const selectedLabels = selectedHours
     .map((hour) => scheduleState.slots.find((slot) => slot.hour === hour))
     .filter(Boolean)
-    .map((slot) => `<li>${slot[config.slotKey].label}</li>`)
+    .map((slot) => `<span class="selected-slot-chip">${slot[config.slotKey].label}</span>`)
     .join("");
 
   slotHourInput.value = selectedHours.join(",");
   selectedSlotSummary.className = "selected-slot";
   selectedSlotSummary.innerHTML = `
-    <strong>Selected hours (${selectedHours.length})</strong>
-    <ul class="selected-slot-list">${selectedLabels}</ul>
+    <div class="selected-slot-heading">
+      <strong>${selectedHours.length === 1 ? "1 hour selected" : `${selectedHours.length} hours selected`}</strong>
+      <span>${config.timeLabel}</span>
+    </div>
+    <div class="selected-slot-chips">${selectedLabels}</div>
   `;
+  updateMobileCta();
 }
 
 function toggleHourSelection(hour) {
@@ -138,8 +163,8 @@ function renderSchedule() {
 
       <div class="slot-times">
         <div class="slot-time">
-          <strong>${config.timeLabel}</strong>
-          <span>${slot[config.slotKey].label}</span>
+          <strong>${slot[config.slotKey].label}</strong>
+          <span>${config.timeLabel}</span>
         </div>
       </div>
     `;
@@ -172,6 +197,8 @@ function applySchedule(schedule) {
   if (selectedCountry) {
     renderSelectedSummary();
     renderSchedule();
+  } else {
+    updateMobileCta();
   }
 }
 
@@ -276,8 +303,18 @@ changeCountryButton.addEventListener("click", () => {
   selectedSlotSummary.textContent = "Select one or more available hours to continue.";
   scheduleGrid.innerHTML = "";
   updateCountryUi();
+  updateMobileCta();
   openCountryPrompt();
 });
+
+if (mobileCta) {
+  mobileCta.addEventListener("click", () => {
+    formPanel.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  });
+}
 
 loadSchedule();
 openCountryPrompt();

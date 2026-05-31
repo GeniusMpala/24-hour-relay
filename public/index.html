@@ -12,13 +12,13 @@
     />
     <link rel="stylesheet" href="/styles.css" />
   </head>
-  <body>
+  <body class="booking-page">
     <div id="country-modal" class="country-modal">
       <div class="country-dialog card">
         <p class="eyebrow">Before You Begin</p>
         <h2>Select your country</h2>
         <p class="hero-copy">
-          We’ll show the prayer schedule in the time zone that matches where you
+          We'll show the prayer schedule in the time zone that matches where you
           are booking from.
         </p>
         <div class="country-actions">
@@ -46,7 +46,7 @@
       </section>
 
       <section class="layout">
-        <section class="card schedule-panel">
+        <section id="schedule-panel" class="card schedule-panel">
           <div class="section-heading">
             <div>
               <p class="eyebrow">Available Hours</p>
@@ -64,7 +64,7 @@
           <div id="schedule-grid" class="schedule-grid"></div>
         </section>
 
-        <section class="card form-panel">
+        <section id="form-panel" class="card form-panel">
           <div class="section-heading">
             <div>
               <p class="eyebrow">Your Signup</p>
@@ -127,8 +127,12 @@
           </form>
         </section>
       </section>
+
+      <button id="mobile-cta" class="mobile-cta hidden" type="button">
+        Continue with selected hours
+      </button>
     </main>
 
     <script src="/app.js"></script>
   </body>
-  </html>
+</html>
