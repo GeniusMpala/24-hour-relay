@@ -22,15 +22,15 @@ async function getStateStore() {
     readEnv("NETLIFY_AUTH_TOKEN") ||
     readEnv("NETLIFY_ACCESS_TOKEN");
 
-  const options = {};
-  if (siteID) {
-    options.siteID = siteID;
-  }
-  if (token) {
-    options.token = token;
+  if (siteID && token) {
+    return getStore({
+      name: "prayer-schedule",
+      siteID,
+      token,
+    });
   }
 
-  return getStore("prayer-schedule", options);
+  return getStore("prayer-schedule");
 }
 
 function createInitialState() {
@@ -66,40 +66,23 @@ async function readState() {
   };
 }
 
-async function writeState(state, etag) {
+async function writeState(state) {
   state.updatedAt = new Date().toISOString();
 
-  if (etag) {
-    const store = await getStateStore();
-    return store.setJSON(stateKey, state, {
-      onlyIfMatch: etag,
-    });
-  }
-
   const store = await getStateStore();
-  return store.setJSON(stateKey, state, {
-    onlyIfNew: true,
-  });
+  await store.setJSON(stateKey, state);
 }
 
 async function updateState(mutator, options = {}) {
-  const maxAttempts = options.maxAttempts || 5;
+  const { state } = await readState();
+  const nextState = cloneValue(state);
+  const result = await mutator(nextState);
+  await writeState(nextState);
 
-  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
-    const { state, etag } = await readState();
-    const nextState = cloneValue(state);
-    const result = await mutator(nextState);
-    const writeResult = await writeState(nextState, etag);
-
-    if (writeResult.modified) {
-      return {
-        state: nextState,
-        result,
-      };
-    }
-  }
-
-  throw new Error("Unable to save changes right now. Please try again.");
+  return {
+    state: nextState,
+    result,
+  };
 }
 
 async function getEventDateSetting() {
