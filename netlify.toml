@@ -1,0 +1,26 @@
+[build]
+  command = "echo Netlify build ready"
+  publish = "public"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+  external_node_modules = ["express", "serverless-http", "@netlify/blobs", "pdfkit", "twilio"]
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/admin/export.csv"
+  to = "/.netlify/functions/api/admin/export.csv"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/admin/export.pdf"
+  to = "/.netlify/functions/api/admin/export.pdf"
+  status = 200
+  force = true

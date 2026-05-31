@@ -85,6 +85,20 @@ async function loadAdminSchedule() {
   }
 }
 
+let adminRefreshTimer = null;
+
+function startAdminPolling() {
+  if (adminRefreshTimer) {
+    clearInterval(adminRefreshTimer);
+  }
+
+  adminRefreshTimer = setInterval(() => {
+    loadAdminSchedule().catch((error) => {
+      console.error("Unable to refresh the admin schedule.", error);
+    });
+  }, 15000);
+}
+
 exportCsv.href = `/admin/export.csv${adminToken ? `?token=${encodeURIComponent(adminToken)}` : ""}`;
 exportPdf.href = `/admin/export.pdf${adminToken ? `?token=${encodeURIComponent(adminToken)}` : ""}`;
 
@@ -159,10 +173,4 @@ reminderForm.addEventListener("submit", async (event) => {
 });
 
 loadAdminSchedule();
-
-if (window.EventSource) {
-  const stream = new EventSource("/api/stream");
-  stream.onmessage = async () => {
-    await loadAdminSchedule();
-  };
-}
+startAdminPolling();

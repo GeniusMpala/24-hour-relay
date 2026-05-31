@@ -189,6 +189,20 @@ async function loadSchedule() {
   }
 }
 
+let scheduleRefreshTimer = null;
+
+function startSchedulePolling() {
+  if (scheduleRefreshTimer) {
+    clearInterval(scheduleRefreshTimer);
+  }
+
+  scheduleRefreshTimer = setInterval(() => {
+    loadSchedule().catch((error) => {
+      console.error("Unable to refresh the schedule.", error);
+    });
+  }, 15000);
+}
+
 bookingForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   clearMessage(formMessage);
@@ -267,15 +281,4 @@ changeCountryButton.addEventListener("click", () => {
 
 loadSchedule();
 openCountryPrompt();
-
-if (window.EventSource) {
-  const stream = new EventSource("/api/stream");
-  stream.onmessage = (event) => {
-    try {
-      const schedule = JSON.parse(event.data);
-      applySchedule(schedule);
-    } catch (error) {
-      console.error("Unable to process live schedule update.", error);
-    }
-  };
-}
+startSchedulePolling();

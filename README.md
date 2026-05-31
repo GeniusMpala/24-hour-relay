@@ -31,6 +31,7 @@ A simple mobile-friendly web application for a 24-hour prayer schedule. People c
 - Node.js
 - Express
 - SQLite via `better-sqlite3`
+- Netlify Functions and Netlify Blobs for Netlify deployment
 - Vanilla HTML, CSS, and JavaScript
 - PDFKit for PDF export
 - Luxon for timezone-safe schedule rendering
@@ -39,6 +40,9 @@ A simple mobile-friendly web application for a 24-hour prayer schedule. People c
 
 ```text
 .
+|-- netlify/
+|   `-- functions/
+|       `-- api.js
 |-- public/
 |   |-- index.html
 |   |-- confirmation.html
@@ -49,7 +53,10 @@ A simple mobile-friendly web application for a 24-hour prayer schedule. People c
 |   `-- admin.js
 |-- src/
 |   |-- db.js
+|   |-- netlify-state.js
+|   |-- reminders.js
 |   `-- schedule.js
+|-- netlify.toml
 |-- server.js
 |-- package.json
 `-- README.md
@@ -119,6 +126,30 @@ Optional configuration:
 - `SMS_REMINDER_DRY_RUN`
   - Optional
   - Set to `true` to test reminder sending without actually texting anyone
+
+## Netlify Deployment
+
+This repository is now customized for Netlify using:
+
+- `public/` as the publish directory
+- `netlify/functions/api.js` for the backend API
+- Netlify Blobs for persistent schedule storage when deployed on Netlify
+
+The Netlify configuration is stored in [netlify.toml](./netlify.toml).
+
+### Required Netlify environment variables
+
+- `ADMIN_TOKEN`
+- optional `EVENT_DATE` for the first default date only
+- `TWILIO_ACCOUNT_SID` for live reminders
+- `TWILIO_AUTH_TOKEN` for live reminders
+- `TWILIO_FROM_NUMBER` or `TWILIO_MESSAGING_SERVICE_SID` for live reminders
+
+### Important note about storage
+
+When deployed on Netlify, the app uses Netlify Blobs instead of SQLite because Netlify Functions do not run with a persistent local database file.
+
+For local `node server.js` development, the app still uses SQLite.
 
 Example:
 
