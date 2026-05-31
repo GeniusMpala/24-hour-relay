@@ -1,10 +1,10 @@
 const crypto = require("crypto");
-const { getStore } = require("@netlify/blobs");
 
 const stateKey = "state";
 const defaultEventDate = process.env.EVENT_DATE || "2026-06-01";
 
-function getStateStore() {
+async function getStateStore() {
+  const { getStore } = await import("@netlify/blobs");
   return getStore({ name: "prayer-schedule", consistency: "strong" });
 }
 
@@ -22,7 +22,8 @@ function cloneValue(value) {
 }
 
 async function readState() {
-  const entry = await getStateStore().getWithMetadata(stateKey, {
+  const store = await getStateStore();
+  const entry = await store.getWithMetadata(stateKey, {
     type: "json",
     consistency: "strong",
   });
@@ -44,12 +45,14 @@ async function writeState(state, etag) {
   state.updatedAt = new Date().toISOString();
 
   if (etag) {
-    return getStateStore().setJSON(stateKey, state, {
+    const store = await getStateStore();
+    return store.setJSON(stateKey, state, {
       onlyIfMatch: etag,
     });
   }
 
-  return getStateStore().setJSON(stateKey, state, {
+  const store = await getStateStore();
+  return store.setJSON(stateKey, state, {
     onlyIfNew: true,
   });
 }
