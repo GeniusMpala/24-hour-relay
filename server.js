@@ -9,6 +9,7 @@ const {
   getFullSchedule,
   getReminderRecipients,
   getTakenSlots,
+  resetSlotBooking,
   setEventDateSetting,
 } = require("./src/db");
 const {
@@ -193,6 +194,15 @@ function validateReminderInput(input) {
   };
 }
 
+function parseSlotHourParam(value) {
+  const slotHour = Number(value);
+  if (!Number.isInteger(slotHour) || slotHour < 0 || slotHour > 23) {
+    return null;
+  }
+
+  return slotHour;
+}
+
 app.get("/api/schedule", (req, res) => {
   res.json(schedulePayload(false));
 });
@@ -308,6 +318,26 @@ app.post("/api/admin/event-date", requireAdmin, (req, res) => {
   res.json({
     message: "Prayer date updated successfully.",
     eventDate: savedEventDate,
+  });
+});
+
+app.post("/api/admin/slots/:hour/reset", requireAdmin, (req, res) => {
+  const slotHour = parseSlotHourParam(req.params.hour);
+  if (slotHour === null) {
+    return res.status(400).json({ error: "Select a valid schedule hour to reset." });
+  }
+
+  const removedBooking = resetSlotBooking(slotHour);
+  if (!removedBooking) {
+    return res.status(404).json({ error: "That hour is already available." });
+  }
+
+  broadcastScheduleUpdate();
+
+  res.json({
+    message: "Prayer hour reset successfully.",
+    slotHour,
+    booking: removedBooking,
   });
 });
 

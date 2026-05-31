@@ -140,6 +140,11 @@ const insertReminderLog = db.prepare(`
   )
 `);
 
+const deleteBookingBySlotHour = db.prepare(`
+  DELETE FROM bookings
+  WHERE slot_hour = ?
+`);
+
 const insertBookingGroup = db.transaction((booking) => {
   const signupId = crypto.randomUUID();
 
@@ -206,6 +211,25 @@ function setEventDateSetting(eventDate) {
   return getEventDateSetting();
 }
 
+function resetSlotBooking(slotHour) {
+  const booking = db
+    .prepare(
+      `
+        SELECT *
+        FROM bookings
+        WHERE slot_hour = ?
+      `
+    )
+    .get(slotHour);
+
+  if (!booking) {
+    return null;
+  }
+
+  deleteBookingBySlotHour.run(slotHour);
+  return booking;
+}
+
 function createReminderLog(entry) {
   insertReminderLog.run(entry);
 }
@@ -218,5 +242,6 @@ module.exports = {
   getFullSchedule,
   getReminderRecipients,
   getTakenSlots,
+  resetSlotBooking,
   setEventDateSetting,
 };

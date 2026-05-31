@@ -516,6 +516,18 @@ h2 {
   vertical-align: top;
 }
 
+.admin-reset-button {
+  min-height: 2.4rem;
+  padding: 0.55rem 0.85rem;
+  font-size: 0.88rem;
+}
+
+.admin-action-note {
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
 .admin-table th {
   color: var(--muted);
   font-size: 0.82rem;
@@ -539,6 +551,10 @@ h2 {
 .admin-mobile-card p {
   margin: 0.4rem 0;
   line-height: 1.6;
+}
+
+.admin-mobile-actions {
+  margin-top: 0.85rem;
 }
 
 @media (max-width: 980px) {

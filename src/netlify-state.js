@@ -98,6 +98,21 @@ async function setEventDateSetting(eventDate) {
   return update.state.eventDate;
 }
 
+async function resetSlotBooking(slotHour) {
+  const update = await updateState((state) => {
+    const bookingIndex = (state.bookings || []).findIndex((entry) => entry.slot_hour === slotHour);
+
+    if (bookingIndex === -1) {
+      return null;
+    }
+
+    const [removedBooking] = state.bookings.splice(bookingIndex, 1);
+    return removedBooking;
+  });
+
+  return update.result;
+}
+
 async function getFullScheduleBookings() {
   const { state } = await readState();
   return state.bookings || [];
@@ -210,5 +225,6 @@ module.exports = {
   getFullScheduleBookings,
   getReminderRecipients,
   getTakenSlots,
+  resetSlotBooking,
   setEventDateSetting,
 };

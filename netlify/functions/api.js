@@ -8,6 +8,7 @@ const {
   getEventDateSetting,
   getFullScheduleBookings,
   getReminderRecipients,
+  resetSlotBooking,
   setEventDateSetting,
 } = require("../../src/netlify-state");
 const {
@@ -118,6 +119,15 @@ function validateReminderInput(input) {
     error: null,
     reminderMessage,
   };
+}
+
+function parseSlotHourParam(value) {
+  const slotHour = Number(value);
+  if (!Number.isInteger(slotHour) || slotHour < 0 || slotHour > 23) {
+    return null;
+  }
+
+  return slotHour;
 }
 
 function serializeSlot(slot, includeBookingDetails) {
@@ -233,6 +243,24 @@ app.post("/api/admin/event-date", requireAdmin, async (req, res) => {
   res.json({
     message: "Prayer date updated successfully.",
     eventDate: savedEventDate,
+  });
+});
+
+app.post("/api/admin/slots/:hour/reset", requireAdmin, async (req, res) => {
+  const slotHour = parseSlotHourParam(req.params.hour);
+  if (slotHour === null) {
+    return res.status(400).json({ error: "Select a valid schedule hour to reset." });
+  }
+
+  const removedBooking = await resetSlotBooking(slotHour);
+  if (!removedBooking) {
+    return res.status(404).json({ error: "That hour is already available." });
+  }
+
+  res.json({
+    message: "Prayer hour reset successfully.",
+    slotHour,
+    booking: removedBooking,
   });
 });
 

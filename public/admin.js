@@ -28,6 +28,18 @@ function setAdminMessage(type, text) {
   adminMessage.textContent = text;
 }
 
+function getResetButtonMarkup(slot) {
+  if (!slot.isBooked) {
+    return '<span class="admin-action-note">Open</span>';
+  }
+
+  return `
+    <button class="secondary-button admin-reset-button" type="button" data-slot-hour="${slot.hour}">
+      Reset hour
+    </button>
+  `;
+}
+
 function renderAdminSchedule(schedule) {
   adminEventDate.textContent = `Event date: ${schedule.eventDate}`;
   eventDateInput.value = schedule.eventDate;
@@ -49,6 +61,7 @@ function renderAdminSchedule(schedule) {
       <td>${escapeHtml(slot.booking?.location || "-")}</td>
       <td>${escapeHtml(slot.booking?.contact || "-")}</td>
       <td>${escapeHtml(slot.booking?.topic || "-")}</td>
+      <td>${getResetButtonMarkup(slot)}</td>
     `;
     adminTableBody.appendChild(row);
 
@@ -63,11 +76,39 @@ function renderAdminSchedule(schedule) {
       <p><strong>Location:</strong> ${escapeHtml(slot.booking?.location || "-")}</p>
       <p><strong>Contact:</strong> ${escapeHtml(slot.booking?.contact || "-")}</p>
       <p><strong>Topic:</strong> ${escapeHtml(slot.booking?.topic || "-")}</p>
+      <div class="admin-mobile-actions">${getResetButtonMarkup(slot)}</div>
     `;
     adminMobileList.appendChild(card);
   });
 
   setAdminMessage("success", "Schedule loaded. This page refreshes when new bookings come in.");
+}
+
+async function resetSlot(slotHour, button) {
+  const originalText = button.textContent;
+  button.disabled = true;
+  button.textContent = "Resetting...";
+
+  try {
+    const response = await fetch(
+      `/api/admin/slots/${slotHour}/reset${adminToken ? `?token=${encodeURIComponent(adminToken)}` : ""}`,
+      {
+        method: "POST",
+      }
+    );
+
+    const result = await response.json();
+    if (!response.ok) {
+      throw new Error(result.error || "Unable to reset this prayer hour.");
+    }
+
+    setAdminMessage("success", "Prayer hour reset. That slot is available again.");
+    await loadAdminSchedule();
+  } catch (error) {
+    setAdminMessage("error", error.message);
+    button.disabled = false;
+    button.textContent = originalText;
+  }
 }
 
 async function loadAdminSchedule() {
@@ -170,6 +211,22 @@ reminderForm.addEventListener("submit", async (event) => {
     sendRemindersButton.disabled = false;
     sendRemindersButton.textContent = "Send text reminders";
   }
+});
+
+document.addEventListener("click", (event) => {
+  const resetButton = event.target.closest("[data-slot-hour]");
+  if (!resetButton) {
+    return;
+  }
+
+  const slotHour = Number(resetButton.dataset.slotHour);
+  if (!Number.isInteger(slotHour)) {
+    return;
+  }
+
+  resetSlot(slotHour, resetButton).catch((error) => {
+    console.error("Unable to reset the slot.", error);
+  });
 });
 
 loadAdminSchedule();
