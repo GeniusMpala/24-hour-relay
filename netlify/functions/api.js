@@ -8,6 +8,7 @@ const {
   getEventDateSetting,
   getFullScheduleBookings,
   getReminderRecipients,
+  resetAllBookings,
   resetSlotBooking,
   setEventDateSetting,
 } = require("../../src/netlify-state");
@@ -17,6 +18,7 @@ const {
   normalizePhoneNumber,
   sendReminderMessage,
 } = require("../../src/reminders");
+const { renderPrayerSchedulePdf } = require("../../src/pdf-schedule");
 const { buildSchedule } = require("../../src/schedule");
 
 const app = express();
@@ -264,6 +266,15 @@ app.post("/api/admin/slots/:hour/reset", requireAdmin, async (req, res) => {
   });
 });
 
+app.post("/api/admin/reset-all", requireAdmin, async (req, res) => {
+  const resetCount = await resetAllBookings();
+
+  res.json({
+    message: "Full prayer schedule reset successfully.",
+    resetCount,
+  });
+});
+
 app.post("/api/admin/send-reminders", requireAdmin, async (req, res) => {
   const { error, reminderMessage } = validateReminderInput(req.body);
   if (error) {
@@ -405,31 +416,10 @@ app.get("/admin/export.pdf", requireAdmin, async (req, res) => {
   );
 
   doc.pipe(res);
-  doc.fontSize(20).text("24-Hour Prayer Schedule", { align: "center" });
-  doc.moveDown(0.25);
-  doc.fontSize(11).fillColor("#555").text(`Event date: ${eventDate}`, { align: "center" });
-  doc.moveDown();
-
-  doc.fillColor("#000");
-  slots.forEach((slot) => {
-    doc
-      .fontSize(11)
-      .text(
-        `${String(slot.hour).padStart(2, "0")}:00 | ET: ${slot.eastern.label} | Zimbabwe: ${slot.zimbabwe.label}`
-      );
-    doc
-      .fontSize(10)
-      .fillColor(slot.isBooked ? "#000" : "#666")
-      .text(
-        slot.isBooked
-          ? `Booked by ${slot.booking.full_name} | ${slot.booking.location} | ${slot.booking.contact}${slot.booking.topic ? ` | Topic: ${slot.booking.topic}` : ""}`
-          : "Available"
-      );
-    doc.fillColor("#000");
-    doc.moveDown(0.5);
-  });
-
+  renderPrayerSchedulePdf(doc, { eventDate, slots });
   doc.end();
 });
 
-exports.handler = serverless(app);
+exports.handler = serverless(app, {
+  binary: ["application/pdf"],
+});

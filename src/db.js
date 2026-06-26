@@ -145,6 +145,10 @@ const deleteBookingBySlotHour = db.prepare(`
   WHERE slot_hour = ?
 `);
 
+const deleteAllBookings = db.prepare(`
+  DELETE FROM bookings
+`);
+
 const insertBookingGroup = db.transaction((booking) => {
   const signupId = crypto.randomUUID();
 
@@ -230,6 +234,12 @@ function resetSlotBooking(slotHour) {
   return booking;
 }
 
+function resetAllBookings() {
+  const bookingCount = db.prepare("SELECT COUNT(*) AS count FROM bookings").get().count;
+  deleteAllBookings.run();
+  return bookingCount;
+}
+
 function createReminderLog(entry) {
   insertReminderLog.run(entry);
 }
@@ -242,6 +252,7 @@ module.exports = {
   getFullSchedule,
   getReminderRecipients,
   getTakenSlots,
+  resetAllBookings,
   resetSlotBooking,
   setEventDateSetting,
 };

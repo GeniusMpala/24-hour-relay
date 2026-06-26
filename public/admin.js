@@ -10,6 +10,7 @@ const saveDateButton = document.getElementById("save-date-button");
 const reminderForm = document.getElementById("reminder-form");
 const reminderMessageInput = document.getElementById("reminder-message-input");
 const sendRemindersButton = document.getElementById("send-reminders-button");
+const resetAllButton = document.getElementById("reset-all-button");
 
 const adminParams = new URLSearchParams(window.location.search);
 const adminToken = adminParams.get("token");
@@ -108,6 +109,42 @@ async function resetSlot(slotHour, button) {
     setAdminMessage("error", error.message);
     button.disabled = false;
     button.textContent = originalText;
+  }
+}
+
+async function resetAllHours() {
+  if (!window.confirm("This will clear every booked prayer hour and reopen the full schedule. Continue?")) {
+    return;
+  }
+
+  resetAllButton.disabled = true;
+  resetAllButton.textContent = "Resetting all...";
+
+  try {
+    const response = await fetch(
+      `/api/admin/reset-all${adminToken ? `?token=${encodeURIComponent(adminToken)}` : ""}`,
+      {
+        method: "POST",
+      }
+    );
+
+    const result = await response.json();
+    if (!response.ok) {
+      throw new Error(result.error || "Unable to reset the full prayer schedule.");
+    }
+
+    setAdminMessage(
+      "success",
+      result.resetCount > 0
+        ? `All booked hours were cleared. ${result.resetCount} hour${result.resetCount === 1 ? "" : "s"} reopened.`
+        : "The schedule was already fully open."
+    );
+    await loadAdminSchedule();
+  } catch (error) {
+    setAdminMessage("error", error.message);
+  } finally {
+    resetAllButton.disabled = false;
+    resetAllButton.textContent = "Reset all hours";
   }
 }
 
@@ -211,6 +248,12 @@ reminderForm.addEventListener("submit", async (event) => {
     sendRemindersButton.disabled = false;
     sendRemindersButton.textContent = "Send text reminders";
   }
+});
+
+resetAllButton.addEventListener("click", () => {
+  resetAllHours().catch((error) => {
+    console.error("Unable to reset the full schedule.", error);
+  });
 });
 
 document.addEventListener("click", (event) => {

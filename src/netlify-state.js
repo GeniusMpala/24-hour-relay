@@ -113,6 +113,16 @@ async function resetSlotBooking(slotHour) {
   return update.result;
 }
 
+async function resetAllBookings() {
+  const update = await updateState((state) => {
+    const resetCount = (state.bookings || []).length;
+    state.bookings = [];
+    return resetCount;
+  });
+
+  return update.result;
+}
+
 async function getFullScheduleBookings() {
   const { state } = await readState();
   return state.bookings || [];
@@ -225,6 +235,7 @@ module.exports = {
   getFullScheduleBookings,
   getReminderRecipients,
   getTakenSlots,
+  resetAllBookings,
   resetSlotBooking,
   setEventDateSetting,
 };
