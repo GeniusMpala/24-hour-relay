@@ -37,6 +37,7 @@ function createInitialState() {
   return {
     eventDate: defaultEventDate,
     bookings: [],
+    prayerRequests: [],
     reminderLogs: [],
     updatedAt: new Date().toISOString(),
   };
@@ -227,12 +228,55 @@ async function createReminderLog(entry) {
   });
 }
 
+async function createPrayerRequest(entry) {
+  const request = {
+    id: crypto.randomUUID(),
+    public_id: crypto.randomUUID(),
+    person_name: entry.personName,
+    contact: entry.contact,
+    request_text: entry.requestText,
+    created_at: new Date().toISOString(),
+  };
+
+  await updateState((state) => {
+    state.prayerRequests = [request, ...(state.prayerRequests || [])];
+    return null;
+  });
+
+  return request;
+}
+
+async function getPrayerRequests() {
+  const { state } = await readState();
+  return (state.prayerRequests || []).slice();
+}
+
+async function deletePrayerRequest(id) {
+  const update = await updateState((state) => {
+    const prayerRequests = state.prayerRequests || [];
+    const requestIndex = prayerRequests.findIndex((entry) => entry.public_id === id);
+
+    if (requestIndex === -1) {
+      return null;
+    }
+
+    const [removedRequest] = prayerRequests.splice(requestIndex, 1);
+    state.prayerRequests = prayerRequests;
+    return removedRequest;
+  });
+
+  return update.result;
+}
+
 module.exports = {
   createBookingGroup,
+  createPrayerRequest,
   createReminderLog,
+  deletePrayerRequest,
   getBookingGroupById,
   getEventDateSetting,
   getFullScheduleBookings,
+  getPrayerRequests,
   getReminderRecipients,
   getTakenSlots,
   resetAllBookings,

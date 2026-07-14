@@ -103,6 +103,42 @@
 
         <div id="admin-mobile-list" class="admin-mobile-list"></div>
       </section>
+
+      <section class="card admin-panel">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Private Requests</p>
+            <h2>Prayer requests</h2>
+          </div>
+          <div class="admin-actions prayer-request-actions">
+            <span id="prayer-request-count" class="badge badge-soft">Loading requests...</span>
+            <a id="export-prayer-requests-csv" class="secondary-button" href="#">
+              Download requests CSV
+            </a>
+          </div>
+        </div>
+
+        <p id="prayer-request-empty" class="section-note">
+          No prayer requests have been submitted yet.
+        </p>
+
+        <div class="admin-table-wrap">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Submitted</th>
+                <th>Person</th>
+                <th>Phone</th>
+                <th>Request</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="prayer-request-table-body"></tbody>
+          </table>
+        </div>
+
+        <div id="prayer-request-mobile-list" class="admin-mobile-list"></div>
+      </section>
     </main>
 
     <script src="/admin.js"></script>

@@ -48,6 +48,17 @@ db.exec(`
   );
 `);
 
+db.exec(`
+  CREATE TABLE IF NOT EXISTS prayer_requests (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    public_id TEXT NOT NULL UNIQUE,
+    person_name TEXT NOT NULL,
+    contact TEXT DEFAULT '',
+    request_text TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  );
+`);
+
 const tableInfo = db.prepare("PRAGMA table_info(bookings)").all();
 const hasSignupIdColumn = tableInfo.some((column) => column.name === "signup_id");
 
@@ -138,6 +149,28 @@ const insertReminderLog = db.prepare(`
     @providerMessageId,
     @errorMessage
   )
+`);
+
+const insertPrayerRequest = db.prepare(`
+  INSERT INTO prayer_requests (public_id, person_name, contact, request_text)
+  VALUES (@publicId, @personName, @contact, @requestText)
+`);
+
+const selectPrayerRequestByPublicId = db.prepare(`
+  SELECT *
+  FROM prayer_requests
+  WHERE public_id = ?
+`);
+
+const selectPrayerRequests = db.prepare(`
+  SELECT *
+  FROM prayer_requests
+  ORDER BY datetime(created_at) DESC, id DESC
+`);
+
+const deletePrayerRequestByPublicId = db.prepare(`
+  DELETE FROM prayer_requests
+  WHERE public_id = ?
 `);
 
 const deleteBookingBySlotHour = db.prepare(`
@@ -244,12 +277,40 @@ function createReminderLog(entry) {
   insertReminderLog.run(entry);
 }
 
+function createPrayerRequest(entry) {
+  const publicId = crypto.randomUUID();
+  insertPrayerRequest.run({
+    publicId,
+    personName: entry.personName,
+    contact: entry.contact,
+    requestText: entry.requestText,
+  });
+  return selectPrayerRequestByPublicId.get(publicId);
+}
+
+function getPrayerRequests() {
+  return selectPrayerRequests.all();
+}
+
+function deletePrayerRequest(id) {
+  const prayerRequest = selectPrayerRequestByPublicId.get(id);
+  if (!prayerRequest) {
+    return null;
+  }
+
+  deletePrayerRequestByPublicId.run(id);
+  return prayerRequest;
+}
+
 module.exports = {
   createBookingGroup,
+  createPrayerRequest,
   createReminderLog,
+  deletePrayerRequest,
   getBookingGroupById,
   getEventDateSetting,
   getFullSchedule,
+  getPrayerRequests,
   getReminderRecipients,
   getTakenSlots,
   resetAllBookings,

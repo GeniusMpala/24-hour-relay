@@ -3,10 +3,13 @@ const express = require("express");
 const PDFDocument = require("pdfkit");
 const {
   createBookingGroup,
+  createPrayerRequest,
   createReminderLog,
+  deletePrayerRequest,
   getBookingGroupById,
   getEventDateSetting,
   getFullSchedule,
+  getPrayerRequests,
   getReminderRecipients,
   getTakenSlots,
   resetAllBookings,
@@ -126,6 +129,37 @@ function validateBookingInput(input) {
   };
 }
 
+function validatePrayerRequestInput(input) {
+  const errors = [];
+  const personName = String(input?.personName || "").trim();
+  const contact = String(input?.contact || "").trim();
+  const requestText = String(input?.requestText || "").trim();
+
+  if (!personName) {
+    errors.push("Person name is required.");
+  }
+
+  if (!requestText) {
+    errors.push("Prayer request is required.");
+  } else if (requestText.length > 600) {
+    errors.push("Keep the prayer request under 600 characters.");
+  }
+
+  if (contact) {
+    const phonePattern = /^[+\d\s().-]{7,}$/;
+    if (!phonePattern.test(contact)) {
+      errors.push("Enter a valid phone number or leave it blank.");
+    }
+  }
+
+  return {
+    errors,
+    personName,
+    contact,
+    requestText,
+  };
+}
+
 function serializeSlot(slot, includeBookingDetails) {
   return {
     hour: slot.hour,
@@ -203,6 +237,16 @@ function parseSlotHourParam(value) {
   }
 
   return slotHour;
+}
+
+function buildCsv(rows) {
+  return rows
+    .map((row) =>
+      row
+        .map((value) => `"${String(value ?? "").replace(/"/g, '""')}"`)
+        .join(",")
+    )
+    .join("\n");
 }
 
 app.get("/api/schedule", (req, res) => {
@@ -300,12 +344,52 @@ app.post("/api/bookings", (req, res) => {
   }
 });
 
+app.post("/api/prayer-requests", (req, res) => {
+  const { errors, personName, contact, requestText } = validatePrayerRequestInput(req.body);
+  if (errors.length > 0) {
+    return res.status(400).json({ errors });
+  }
+
+  try {
+    createPrayerRequest({
+      personName,
+      contact,
+      requestText,
+    });
+
+    res.status(201).json({
+      message: "Your prayer request has been shared with the admin team.",
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Unable to save the prayer request right now." });
+  }
+});
+
 app.get("/admin", requireAdminPage, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "admin.html"));
 });
 
 app.get("/api/admin/schedule", requireAdmin, (req, res) => {
   res.json(schedulePayload(true));
+});
+
+app.get("/api/admin/prayer-requests", requireAdmin, (req, res) => {
+  res.json({
+    prayerRequests: getPrayerRequests(),
+  });
+});
+
+app.post("/api/admin/prayer-requests/:id/delete", requireAdmin, (req, res) => {
+  const deletedRequest = deletePrayerRequest(req.params.id);
+  if (!deletedRequest) {
+    return res.status(404).json({ error: "Prayer request not found." });
+  }
+
+  res.json({
+    message: "Prayer request deleted successfully.",
+    prayerRequest: deletedRequest,
+  });
 });
 
 app.post("/api/admin/event-date", requireAdmin, (req, res) => {
@@ -496,6 +580,26 @@ app.get("/admin/export.pdf", requireAdmin, (req, res) => {
   doc.pipe(res);
   renderPrayerSchedulePdf(doc, { eventDate, slots });
   doc.end();
+});
+
+app.get("/admin/prayer-requests/export.csv", requireAdmin, (req, res) => {
+  const prayerRequests = getPrayerRequests();
+  const rows = [
+    ["Submitted", "Person", "Phone", "Request"],
+    ...prayerRequests.map((request) => [
+      request.created_at || "",
+      request.person_name || "",
+      request.contact || "",
+      request.request_text || "",
+    ]),
+  ];
+
+  res.setHeader("Content-Type", "text/csv");
+  res.setHeader(
+    "Content-Disposition",
+    `attachment; filename="prayer-requests-${getCurrentEventDate()}.csv"`
+  );
+  res.send(buildCsv(rows));
 });
 
 app.get("/", (req, res) => {

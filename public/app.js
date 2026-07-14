@@ -4,11 +4,17 @@ const selectedSlotSummary = document.getElementById("selected-slot-summary");
 const eventDateBadge = document.getElementById("event-date-badge");
 const countryBadge = document.getElementById("country-badge");
 const changeCountryButton = document.getElementById("change-country");
+const jumpToPrayerRequestButton = document.getElementById("jump-to-prayer-request");
 const formPanel = document.getElementById("form-panel");
 const bookingForm = document.getElementById("booking-form");
 const slotHourInput = document.getElementById("slotHour");
 const submitButton = document.getElementById("submit-button");
 const formMessage = document.getElementById("form-message");
+const prayerRequestModal = document.getElementById("prayer-request-modal");
+const prayerRequestForm = document.getElementById("prayer-request-form");
+const prayerRequestButton = document.getElementById("prayer-request-button");
+const prayerRequestMessage = document.getElementById("prayer-request-message");
+const closePrayerRequestModalButton = document.getElementById("close-prayer-request-modal");
 const countryModal = document.getElementById("country-modal");
 const countryButtons = document.querySelectorAll(".country-choice");
 const locationInput = document.getElementById("location");
@@ -47,14 +53,31 @@ function getSelectedCountryConfig() {
   return selectedCountry ? countryConfig[selectedCountry] : null;
 }
 
+function syncModalState() {
+  const isCountryModalOpen = !countryModal.classList.contains("hidden");
+  const isPrayerRequestModalOpen = !prayerRequestModal.classList.contains("hidden");
+  document.body.classList.toggle("modal-open", isCountryModalOpen || isPrayerRequestModalOpen);
+}
+
 function openCountryPrompt() {
-  document.body.classList.add("modal-open");
   countryModal.classList.remove("hidden");
+  syncModalState();
 }
 
 function closeCountryPrompt() {
-  document.body.classList.remove("modal-open");
   countryModal.classList.add("hidden");
+  syncModalState();
+}
+
+function openPrayerRequestModal() {
+  clearMessage(prayerRequestMessage);
+  prayerRequestModal.classList.remove("hidden");
+  syncModalState();
+}
+
+function closePrayerRequestModal() {
+  prayerRequestModal.classList.add("hidden");
+  syncModalState();
 }
 
 function updateCountryUi() {
@@ -282,6 +305,49 @@ bookingForm.addEventListener("submit", async (event) => {
   }
 });
 
+prayerRequestForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  clearMessage(prayerRequestMessage);
+
+  prayerRequestButton.disabled = true;
+  prayerRequestButton.textContent = "Saving prayer request...";
+
+  const payload = {
+    personName: document.getElementById("prayer-person-name").value,
+    contact: document.getElementById("prayer-person-contact").value,
+    requestText: document.getElementById("prayer-request-text").value,
+  };
+
+  try {
+    const response = await fetch("/api/prayer-requests", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const result = await response.json();
+    if (!response.ok) {
+      const message =
+        result.errors?.join(" ") || result.error || "Unable to save your prayer request.";
+      throw new Error(message);
+    }
+
+    prayerRequestForm.reset();
+    setMessage(
+      prayerRequestMessage,
+      "success",
+      "Your prayer request was sent privately to the admin team."
+    );
+  } catch (error) {
+    setMessage(prayerRequestMessage, "error", error.message);
+  } finally {
+    prayerRequestButton.disabled = false;
+    prayerRequestButton.textContent = "Add prayer request";
+  }
+});
+
 countryButtons.forEach((button) => {
   button.addEventListener("click", () => {
     selectedCountry = button.dataset.country;
@@ -315,6 +381,32 @@ if (mobileCta) {
     });
   });
 }
+
+if (jumpToPrayerRequestButton) {
+  jumpToPrayerRequestButton.addEventListener("click", () => {
+    openPrayerRequestModal();
+  });
+}
+
+if (closePrayerRequestModalButton) {
+  closePrayerRequestModalButton.addEventListener("click", () => {
+    closePrayerRequestModal();
+  });
+}
+
+if (prayerRequestModal) {
+  prayerRequestModal.addEventListener("click", (event) => {
+    if (event.target === prayerRequestModal) {
+      closePrayerRequestModal();
+    }
+  });
+}
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && prayerRequestModal && !prayerRequestModal.classList.contains("hidden")) {
+    closePrayerRequestModal();
+  }
+});
 
 loadSchedule();
 openCountryPrompt();

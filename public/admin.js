@@ -2,6 +2,11 @@ const adminMessage = document.getElementById("admin-message");
 const adminEventDate = document.getElementById("admin-event-date");
 const adminTableBody = document.getElementById("admin-table-body");
 const adminMobileList = document.getElementById("admin-mobile-list");
+const prayerRequestCount = document.getElementById("prayer-request-count");
+const prayerRequestEmpty = document.getElementById("prayer-request-empty");
+const prayerRequestTableBody = document.getElementById("prayer-request-table-body");
+const prayerRequestMobileList = document.getElementById("prayer-request-mobile-list");
+const exportPrayerRequestsCsv = document.getElementById("export-prayer-requests-csv");
 const exportCsv = document.getElementById("export-csv");
 const exportPdf = document.getElementById("export-pdf");
 const eventDateForm = document.getElementById("event-date-form");
@@ -27,6 +32,34 @@ function escapeHtml(value) {
 function setAdminMessage(type, text) {
   adminMessage.className = `inline-message ${type}`;
   adminMessage.textContent = text;
+}
+
+function formatSubmittedAt(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return value || "-";
+  }
+
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(date);
+}
+
+function formatRequestText(value) {
+  return escapeHtml(value || "-").replace(/\n/g, "<br />");
+}
+
+function getDeletePrayerRequestButtonMarkup(request) {
+  return `
+    <button
+      class="danger-button admin-delete-button"
+      type="button"
+      data-prayer-request-id="${escapeHtml(request.public_id)}"
+    >
+      Delete
+    </button>
+  `;
 }
 
 function getResetButtonMarkup(slot) {
@@ -81,8 +114,74 @@ function renderAdminSchedule(schedule) {
     `;
     adminMobileList.appendChild(card);
   });
+}
 
-  setAdminMessage("success", "Schedule loaded. This page refreshes when new bookings come in.");
+function renderPrayerRequests(prayerRequests) {
+  prayerRequestCount.textContent =
+    prayerRequests.length === 1 ? "1 request" : `${prayerRequests.length} requests`;
+  prayerRequestTableBody.innerHTML = "";
+  prayerRequestMobileList.innerHTML = "";
+
+  if (prayerRequests.length === 0) {
+    prayerRequestEmpty.classList.remove("hidden");
+    return;
+  }
+
+  prayerRequestEmpty.classList.add("hidden");
+
+  prayerRequests.forEach((request) => {
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${escapeHtml(formatSubmittedAt(request.created_at))}</td>
+      <td>${escapeHtml(request.person_name || "-")}</td>
+      <td>${escapeHtml(request.contact || "-")}</td>
+      <td class="request-text-cell">${formatRequestText(request.request_text)}</td>
+      <td>${getDeletePrayerRequestButtonMarkup(request)}</td>
+    `;
+    prayerRequestTableBody.appendChild(row);
+
+    const card = document.createElement("article");
+    card.className = "admin-mobile-card";
+    card.innerHTML = `
+      <p><strong>Submitted:</strong> ${escapeHtml(formatSubmittedAt(request.created_at))}</p>
+      <p><strong>Person:</strong> ${escapeHtml(request.person_name || "-")}</p>
+      <p><strong>Phone:</strong> ${escapeHtml(request.contact || "-")}</p>
+      <p><strong>Request:</strong><br />${formatRequestText(request.request_text)}</p>
+      <div class="admin-mobile-actions">${getDeletePrayerRequestButtonMarkup(request)}</div>
+    `;
+    prayerRequestMobileList.appendChild(card);
+  });
+}
+
+async function deletePrayerRequestEntry(requestId, button) {
+  const originalText = button.textContent;
+  if (!window.confirm("Delete this prayer request? This cannot be undone.")) {
+    return;
+  }
+
+  button.disabled = true;
+  button.textContent = "Deleting...";
+
+  try {
+    const response = await fetch(
+      `/api/admin/prayer-requests/${encodeURIComponent(requestId)}/delete${adminToken ? `?token=${encodeURIComponent(adminToken)}` : ""}`,
+      {
+        method: "POST",
+      }
+    );
+
+    const result = await response.json();
+    if (!response.ok) {
+      throw new Error(result.error || "Unable to delete this prayer request.");
+    }
+
+    setAdminMessage("success", "Prayer request deleted.");
+    await loadAdminData();
+  } catch (error) {
+    setAdminMessage("error", error.message);
+    button.disabled = false;
+    button.textContent = originalText;
+  }
 }
 
 async function resetSlot(slotHour, button) {
@@ -104,7 +203,7 @@ async function resetSlot(slotHour, button) {
     }
 
     setAdminMessage("success", "Prayer hour reset. That slot is available again.");
-    await loadAdminSchedule();
+    await loadAdminData();
   } catch (error) {
     setAdminMessage("error", error.message);
     button.disabled = false;
@@ -139,7 +238,7 @@ async function resetAllHours() {
         ? `All booked hours were cleared. ${result.resetCount} hour${result.resetCount === 1 ? "" : "s"} reopened.`
         : "The schedule was already fully open."
     );
-    await loadAdminSchedule();
+    await loadAdminData();
   } catch (error) {
     setAdminMessage("error", error.message);
   } finally {
@@ -148,16 +247,30 @@ async function resetAllHours() {
   }
 }
 
-async function loadAdminSchedule() {
+async function loadAdminData() {
   try {
-    const response = await fetch(`/api/admin/schedule${adminToken ? `?token=${encodeURIComponent(adminToken)}` : ""}`);
-    const result = await response.json();
+    const tokenSuffix = adminToken ? `?token=${encodeURIComponent(adminToken)}` : "";
+    const [scheduleResponse, requestsResponse] = await Promise.all([
+      fetch(`/api/admin/schedule${tokenSuffix}`),
+      fetch(`/api/admin/prayer-requests${tokenSuffix}`),
+    ]);
+    const scheduleResult = await scheduleResponse.json();
+    const requestsResult = await requestsResponse.json();
 
-    if (!response.ok) {
-      throw new Error(result.error || "Unable to load the admin schedule.");
+    if (!scheduleResponse.ok) {
+      throw new Error(scheduleResult.error || "Unable to load the admin schedule.");
     }
 
-    renderAdminSchedule(result);
+    if (!requestsResponse.ok) {
+      throw new Error(requestsResult.error || "Unable to load prayer requests.");
+    }
+
+    renderAdminSchedule(scheduleResult);
+    renderPrayerRequests(requestsResult.prayerRequests || []);
+    setAdminMessage(
+      "success",
+      "Schedule and private prayer requests loaded. This page refreshes automatically."
+    );
   } catch (error) {
     setAdminMessage("error", error.message);
   }
@@ -171,14 +284,15 @@ function startAdminPolling() {
   }
 
   adminRefreshTimer = setInterval(() => {
-    loadAdminSchedule().catch((error) => {
-      console.error("Unable to refresh the admin schedule.", error);
+    loadAdminData().catch((error) => {
+      console.error("Unable to refresh the admin data.", error);
     });
   }, 15000);
 }
 
 exportCsv.href = `/admin/export.csv${adminToken ? `?token=${encodeURIComponent(adminToken)}` : ""}`;
 exportPdf.href = `/admin/export.pdf${adminToken ? `?token=${encodeURIComponent(adminToken)}` : ""}`;
+exportPrayerRequestsCsv.href = `/admin/prayer-requests/export.csv${adminToken ? `?token=${encodeURIComponent(adminToken)}` : ""}`;
 
 eventDateForm.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -205,7 +319,7 @@ eventDateForm.addEventListener("submit", async (event) => {
     }
 
     setAdminMessage("success", "Prayer date updated. The public schedule now reflects the new date.");
-    await loadAdminSchedule();
+    await loadAdminData();
   } catch (error) {
     setAdminMessage("error", error.message);
   } finally {
@@ -258,19 +372,32 @@ resetAllButton.addEventListener("click", () => {
 
 document.addEventListener("click", (event) => {
   const resetButton = event.target.closest("[data-slot-hour]");
-  if (!resetButton) {
+  if (resetButton) {
+    const slotHour = Number(resetButton.dataset.slotHour);
+    if (!Number.isInteger(slotHour)) {
+      return;
+    }
+
+    resetSlot(slotHour, resetButton).catch((error) => {
+      console.error("Unable to reset the slot.", error);
+    });
     return;
   }
 
-  const slotHour = Number(resetButton.dataset.slotHour);
-  if (!Number.isInteger(slotHour)) {
+  const deletePrayerRequestButton = event.target.closest("[data-prayer-request-id]");
+  if (!deletePrayerRequestButton) {
     return;
   }
 
-  resetSlot(slotHour, resetButton).catch((error) => {
-    console.error("Unable to reset the slot.", error);
+  const requestId = deletePrayerRequestButton.dataset.prayerRequestId;
+  if (!requestId) {
+    return;
+  }
+
+  deletePrayerRequestEntry(requestId, deletePrayerRequestButton).catch((error) => {
+    console.error("Unable to delete the prayer request.", error);
   });
 });
 
-loadAdminSchedule();
+loadAdminData();
 startAdminPolling();

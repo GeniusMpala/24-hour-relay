@@ -24,3 +24,9 @@
   to = "/.netlify/functions/api/admin/export.pdf"
   status = 200
   force = true
+
+[[redirects]]
+  from = "/admin/prayer-requests/export.csv"
+  to = "/.netlify/functions/api/admin/prayer-requests/export.csv"
+  status = 200
+  force = true

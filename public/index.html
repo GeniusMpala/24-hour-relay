@@ -32,6 +32,72 @@
       </div>
     </div>
 
+    <div id="prayer-request-modal" class="country-modal hidden">
+      <div class="country-dialog card prayer-request-dialog">
+        <div class="modal-heading">
+          <div>
+            <p class="eyebrow">Private Prayer Request</p>
+            <h2>Prayer request</h2>
+          </div>
+          <button
+            id="close-prayer-request-modal"
+            class="modal-close-button"
+            type="button"
+            aria-label="Close prayer request form"
+          >
+            Close
+          </button>
+        </div>
+        <p class="hero-copy">
+          Share your request here. Only the admin team can view it.
+        </p>
+
+        <form id="prayer-request-form" class="booking-form modal-form" novalidate>
+          <label>
+            Person name
+            <input
+              id="prayer-person-name"
+              name="personName"
+              type="text"
+              maxlength="120"
+              required
+            />
+          </label>
+
+          <label>
+            Phone number <span class="optional-label">Optional</span>
+            <input
+              id="prayer-person-contact"
+              name="contact"
+              type="text"
+              maxlength="40"
+              placeholder="+1 555 555 5555"
+            />
+          </label>
+
+          <label>
+            Prayer request
+            <textarea
+              id="prayer-request-text"
+              name="requestText"
+              rows="4"
+              maxlength="600"
+              placeholder="How can we pray?"
+              required
+            ></textarea>
+          </label>
+
+          <div id="prayer-request-message" class="inline-message hidden"></div>
+
+          <div class="modal-actions">
+            <button id="prayer-request-button" class="primary-button" type="submit">
+              Submit prayer request
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
     <main class="page-shell">
       <section class="hero card">
         <img class="site-logo" src="/logo.svg" alt="Wisdom and Grace International Ministries" />
@@ -39,6 +105,13 @@
         <div class="hero-meta">
           <span id="event-date-badge" class="badge badge-soft">Loading event date...</span>
           <span id="country-badge" class="badge badge-soft hidden"></span>
+          <button
+            id="jump-to-prayer-request"
+            class="badge badge-soft badge-button"
+            type="button"
+          >
+            Create prayer request
+          </button>
           <button id="change-country" class="badge badge-soft badge-button hidden" type="button">
             Change country
           </button>
@@ -125,6 +198,7 @@
               Confirm my prayer hours
             </button>
           </form>
+
         </section>
       </section>
 

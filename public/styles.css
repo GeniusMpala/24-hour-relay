@@ -216,6 +216,39 @@ h2 {
   padding: 1.4rem;
 }
 
+.prayer-request-dialog {
+  width: min(40rem, 100%);
+}
+
+.modal-heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.8rem;
+}
+
+.modal-close-button {
+  min-height: 2.6rem;
+  padding: 0.65rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.88);
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.modal-form {
+  margin-top: 1.2rem;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
 .country-actions {
   display: flex;
   gap: 0.75rem;
@@ -397,6 +430,10 @@ h2 {
 }
 
 #submit-button {
+  width: 100%;
+}
+
+#prayer-request-button {
   width: 100%;
 }
 
@@ -615,6 +652,24 @@ h2 {
   text-transform: uppercase;
 }
 
+.request-text-cell {
+  min-width: 18rem;
+  white-space: normal;
+  line-height: 1.6;
+}
+
+.prayer-request-actions {
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: 0;
+}
+
+.admin-delete-button {
+  min-height: 2.4rem;
+  padding: 0.55rem 0.85rem;
+  font-size: 0.88rem;
+}
+
 .admin-mobile-list {
   display: none;
   margin-top: 1rem;
@@ -684,6 +739,10 @@ h2 {
     width: 100%;
     padding: 1.2rem 1rem calc(1.2rem + env(safe-area-inset-bottom));
     border-radius: 26px 26px 0 0;
+  }
+
+  .prayer-request-dialog {
+    width: 100%;
   }
 
   .hero,
