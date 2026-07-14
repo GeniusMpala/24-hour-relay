@@ -1,3 +1,4 @@
+# Redeploy triggered 2026-07-14
 [build]
   command = "echo Netlify build ready"
   publish = "public"
