@@ -195,6 +195,10 @@ h2 {
   cursor: pointer;
 }
 
+.prayer-request-badge-button {
+  font-weight: 700;
+}
+
 .country-modal {
   position: fixed;
   inset: 0;
