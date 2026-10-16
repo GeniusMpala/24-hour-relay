@@ -5,31 +5,8 @@ const defaultEventDate = process.env.EVENT_DATE || "2026-06-01";
 
 async function getStateStore() {
   const { getStore } = await import("@netlify/blobs");
-  const envGetter =
-    typeof Netlify !== "undefined" && Netlify?.env?.get
-      ? (key) => Netlify.env.get(key)
-      : () => undefined;
-  const readEnv = (key) => process.env[key] || envGetter(key);
-
-  const siteID =
-    readEnv("BLOBS_SITE_ID") ||
-    readEnv("NETLIFY_BLOBS_SITE_ID") ||
-    readEnv("SITE_ID") ||
-    readEnv("NETLIFY_SITE_ID");
-  const token =
-    readEnv("BLOBS_TOKEN") ||
-    readEnv("NETLIFY_BLOBS_TOKEN") ||
-    readEnv("NETLIFY_AUTH_TOKEN") ||
-    readEnv("NETLIFY_ACCESS_TOKEN");
-
-  if (siteID && token) {
-    return getStore({
-      name: "prayer-schedule",
-      siteID,
-      token,
-    });
-  }
-
+  // In Netlify Functions, @netlify/blobs receives the site's credentials
+  // automatically. Avoid overriding them with potentially stale generic env vars.
   return getStore("prayer-schedule");
 }
 

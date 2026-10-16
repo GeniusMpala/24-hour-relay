@@ -141,10 +141,6 @@ The Netlify configuration is stored in [netlify.toml](./netlify.toml).
 
 - `ADMIN_TOKEN`
 - optional `EVENT_DATE` for the first default date only
-- `BLOBS_SITE_ID`
-  - your Netlify Project ID
-- `BLOBS_TOKEN`
-  - your Netlify personal access token
 - `TWILIO_ACCOUNT_SID` for live reminders
 - `TWILIO_AUTH_TOKEN` for live reminders
 - `TWILIO_FROM_NUMBER` or `TWILIO_MESSAGING_SERVICE_SID` for live reminders
@@ -152,6 +148,7 @@ The Netlify configuration is stored in [netlify.toml](./netlify.toml).
 ### Important note about storage
 
 When deployed on Netlify, the app uses Netlify Blobs instead of SQLite because Netlify Functions do not run with a persistent local database file.
+The Netlify Blobs client receives site credentials from the Functions runtime automatically; do not set `BLOBS_TOKEN` or reuse `NETLIFY_AUTH_TOKEN` for this app's storage.
 
 For local `node server.js` development, the app still uses SQLite.
 
