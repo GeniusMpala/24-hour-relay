@@ -42,7 +42,7 @@ A simple mobile-friendly web application for a 24-hour prayer schedule. People c
 .
 |-- netlify/
 |   `-- functions/
-|       `-- api.js
+|       `-- api.mjs
 |-- public/
 |   |-- index.html
 |   |-- confirmation.html
@@ -132,7 +132,7 @@ Optional configuration:
 This repository is now customized for Netlify using:
 
 - `public/` as the publish directory
-- `netlify/functions/api.js` for the backend API
+- `netlify/functions/api.mjs` for the backend API
 - Netlify Blobs for persistent schedule storage when deployed on Netlify
 
 The Netlify configuration is stored in [netlify.toml](./netlify.toml).
@@ -148,11 +148,11 @@ The Netlify configuration is stored in [netlify.toml](./netlify.toml).
 ### Important note about storage
 
 When deployed on Netlify, the app uses Netlify Blobs instead of SQLite because Netlify Functions do not run with a persistent local database file.
-The Netlify function uses Lambda compatibility mode through `serverless-http`, so it initializes the Blobs client from the credentials Netlify provides on each function event. No separate `BLOBS_TOKEN` or `NETLIFY_AUTH_TOKEN` is needed.
+The backend uses Netlify's modern `Request`/`Response` function API, which automatically provides Blobs credentials and the uncached endpoint required for strong-consistency reads. A small adapter passes requests through `serverless-http` to preserve the existing Express routes, admin authentication, and binary PDF exports. Do not call the legacy `connectLambda` adapter: it replaces the modern Blobs context without configuring `uncachedEdgeURL`. No separate `BLOBS_TOKEN` or `NETLIFY_AUTH_TOKEN` is needed.
 
-Keep `@netlify/blobs` bundled by esbuild rather than adding it to `external_node_modules`. The function and storage adapter use native `import()` so esbuild selects the ESM entry point. Externalizing it can load the CommonJS entry point, which requires the ESM-only `@netlify/runtime-utils` and fails with `ERR_REQUIRE_ESM` on runtimes without support for requiring ES modules.
+Keep the function entry point as an ES module and use native `import()` for `@netlify/blobs` so packaging preserves its ESM entry point. Loading its CommonJS entry point can fail with `ERR_REQUIRE_ESM` because it requires the ESM-only `@netlify/runtime-utils`. The entry point also explicitly imports Twilio and Luxon so Netlify's ESM dependency tracing includes the shared CommonJS helpers' dependencies.
 
-Run `node --test test/netlify-function.test.js` to smoke-test Lambda initialization, schedule reads, booking writes, and booking conflicts with mocked Blobs HTTP requests. To test a packaged function, set `NETLIFY_FUNCTION_ENTRY` to its absolute entry-point path before running the same command.
+Run `node --test test/netlify-function.test.js` to smoke-test strong-consistency schedule reads, booking writes, booking conflicts, admin authentication, and CSV/PDF exports with mocked Blobs HTTP requests. The mock includes both cached and uncached endpoints and asserts that reads use the uncached endpoint. To test a packaged function, set `NETLIFY_FUNCTION_ENTRY` to its absolute entry-point path before running the same command.
 
 For local `node server.js` development, the app still uses SQLite.
 

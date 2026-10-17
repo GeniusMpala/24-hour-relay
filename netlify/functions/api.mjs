@@ -1,7 +1,10 @@
-const express = require("express");
-const serverless = require("serverless-http");
-const PDFDocument = require("pdfkit");
-const {
+import express from "express";
+import serverless from "serverless-http";
+import PDFDocument from "pdfkit";
+// Make the shared helpers' CommonJS dependencies visible to Netlify's ESM tracing.
+import "twilio";
+import "luxon";
+import {
   createBookingGroup,
   createPrayerRequest,
   createReminderLog,
@@ -14,15 +17,15 @@ const {
   resetAllBookings,
   resetSlotBooking,
   setEventDateSetting,
-} = require("../../src/netlify-state");
-const {
+} from "../../src/netlify-state.js";
+import {
   buildReminderMessage,
   getReminderConfigStatus,
   normalizePhoneNumber,
   sendReminderMessage,
-} = require("../../src/reminders");
-const { renderPrayerSchedulePdf } = require("../../src/pdf-schedule");
-const { buildSchedule } = require("../../src/schedule");
+} from "../../src/reminders.js";
+import { renderPrayerSchedulePdf } from "../../src/pdf-schedule.js";
+import { buildSchedule } from "../../src/schedule.js";
 
 const app = express();
 const adminToken = process.env.ADMIN_TOKEN || "";
@@ -529,8 +532,32 @@ const serverlessHandler = serverless(app, {
   binary: ["application/pdf"],
 });
 
-exports.handler = async (event, context) => {
-  const { connectLambda } = await import("@netlify/blobs");
-  connectLambda(event);
-  return serverlessHandler(event, context);
-};
+export default async function handler(request, context) {
+  const url = new URL(request.url);
+  // Keep Express routing and binary exports while using Netlify's modern Blobs context.
+  const result = await serverlessHandler({
+    version: "2.0",
+    rawPath: url.pathname,
+    rawQueryString: url.search.slice(1),
+    headers: Object.fromEntries(request.headers),
+    body: Buffer.from(await request.arrayBuffer()).toString("base64"),
+    isBase64Encoded: true,
+    requestContext: {
+      requestId: context.requestId,
+      http: {
+        method: request.method,
+        sourceIp: context.ip,
+      },
+    },
+  }, context);
+
+  const headers = new Headers(result.headers);
+  for (const cookie of result.cookies || []) {
+    headers.append("set-cookie", cookie);
+  }
+
+  const body = request.method === "HEAD" || [204, 205, 304].includes(result.statusCode)
+    ? null
+    : Buffer.from(result.body, result.isBase64Encoded ? "base64" : "utf8");
+  return new Response(body, { status: result.statusCode, headers });
+}

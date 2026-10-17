@@ -5,7 +5,7 @@ const defaultEventDate = process.env.EVENT_DATE || "2026-06-01";
 
 async function getStateStore() {
   const { getStore } = await import("@netlify/blobs");
-  // In Netlify Functions, @netlify/blobs receives the site's credentials
+  // In modern Netlify Functions, @netlify/blobs receives the site's credentials
   // automatically. Avoid overriding them with potentially stale generic env vars.
   return getStore("prayer-schedule");
 }
