@@ -1,5 +1,6 @@
 const express = require("express");
 const serverless = require("serverless-http");
+const { connectLambda } = require("@netlify/blobs");
 const PDFDocument = require("pdfkit");
 const {
   createBookingGroup,
@@ -525,6 +526,11 @@ app.get("/admin/prayer-requests/export.csv", requireAdmin, async (req, res) => {
   res.send(buildCsv(rows));
 });
 
-exports.handler = serverless(app, {
+const serverlessHandler = serverless(app, {
   binary: ["application/pdf"],
 });
+
+exports.handler = async (event, context) => {
+  connectLambda(event);
+  return serverlessHandler(event, context);
+};

@@ -148,7 +148,7 @@ The Netlify configuration is stored in [netlify.toml](./netlify.toml).
 ### Important note about storage
 
 When deployed on Netlify, the app uses Netlify Blobs instead of SQLite because Netlify Functions do not run with a persistent local database file.
-The Netlify Blobs client receives site credentials from the Functions runtime automatically; do not set `BLOBS_TOKEN` or reuse `NETLIFY_AUTH_TOKEN` for this app's storage.
+The Netlify function uses Lambda compatibility mode through `serverless-http`, so it initializes the Blobs client from the credentials Netlify provides on each function event. No separate `BLOBS_TOKEN` or `NETLIFY_AUTH_TOKEN` is needed.
 
 For local `node server.js` development, the app still uses SQLite.
 
