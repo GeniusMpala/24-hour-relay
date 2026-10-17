@@ -23,6 +23,7 @@ const {
 } = require("../../src/reminders");
 const { renderPrayerSchedulePdf } = require("../../src/pdf-schedule");
 const { buildSchedule } = require("../../src/schedule");
+const importExternalModule = new Function("specifier", "return import(specifier)");
 
 const app = express();
 const adminToken = process.env.ADMIN_TOKEN || "";
@@ -530,7 +531,7 @@ const serverlessHandler = serverless(app, {
 });
 
 exports.handler = async (event, context) => {
-  const { connectLambda } = await import("@netlify/blobs");
+  const { connectLambda } = await importExternalModule("@netlify/blobs");
   connectLambda(event);
   return serverlessHandler(event, context);
 };
