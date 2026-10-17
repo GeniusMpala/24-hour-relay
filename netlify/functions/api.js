@@ -525,6 +525,17 @@ app.get("/admin/prayer-requests/export.csv", requireAdmin, async (req, res) => {
   res.send(buildCsv(rows));
 });
 
-exports.handler = serverless(app, {
+const serverlessHandler = serverless(app, {
   binary: ["application/pdf"],
 });
+
+exports.handler = async (event, context) => {
+  // Lambda-compatible functions must hand the Blobs credentials from the
+  // incoming event to @netlify/blobs before any store is used.
+  if (event && event.blobs) {
+    const { connectLambda } = await import("@netlify/blobs");
+    connectLambda(event);
+  }
+
+  return serverlessHandler(event, context);
+};
