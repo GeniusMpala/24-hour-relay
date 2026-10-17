@@ -1,6 +1,5 @@
 const express = require("express");
 const serverless = require("serverless-http");
-const { connectLambda } = require("@netlify/blobs");
 const PDFDocument = require("pdfkit");
 const {
   createBookingGroup,
@@ -531,6 +530,7 @@ const serverlessHandler = serverless(app, {
 });
 
 exports.handler = async (event, context) => {
+  const { connectLambda } = await import("@netlify/blobs");
   connectLambda(event);
   return serverlessHandler(event, context);
 };
