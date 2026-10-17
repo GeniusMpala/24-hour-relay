@@ -150,6 +150,10 @@ The Netlify configuration is stored in [netlify.toml](./netlify.toml).
 When deployed on Netlify, the app uses Netlify Blobs instead of SQLite because Netlify Functions do not run with a persistent local database file.
 The Netlify function uses Lambda compatibility mode through `serverless-http`, so it initializes the Blobs client from the credentials Netlify provides on each function event. No separate `BLOBS_TOKEN` or `NETLIFY_AUTH_TOKEN` is needed.
 
+Keep `@netlify/blobs` bundled by esbuild rather than adding it to `external_node_modules`. The function and storage adapter use native `import()` so esbuild selects the ESM entry point. Externalizing it can load the CommonJS entry point, which requires the ESM-only `@netlify/runtime-utils` and fails with `ERR_REQUIRE_ESM` on runtimes without support for requiring ES modules.
+
+Run `node --test test/netlify-function.test.js` to smoke-test Lambda initialization, schedule reads, booking writes, and booking conflicts with mocked Blobs HTTP requests. To test a packaged function, set `NETLIFY_FUNCTION_ENTRY` to its absolute entry-point path before running the same command.
+
 For local `node server.js` development, the app still uses SQLite.
 
 Example:

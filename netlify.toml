@@ -5,7 +5,7 @@
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"
-  external_node_modules = ["express", "serverless-http", "@netlify/blobs", "pdfkit", "twilio"]
+  external_node_modules = ["express", "serverless-http", "pdfkit", "twilio"]
 
 [[redirects]]
   from = "/api/*"
